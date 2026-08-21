@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#1f2125" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Studio Bridge Mobile</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <input id="fileInput" type="file" accept=".rbxlx,.rbxmx,.xml,.rbxl,.rbxm" hidden />
+
+  <header class="appTop">
+    <div class="menuRow">
+      <button id="fileMenuBtn" class="menuButton">File</button>
+      <div id="fileMenu" class="dropdown hidden">
+        <button data-action="new">New Project</button>
+        <button data-action="open">Open File...</button>
+        <button data-action="open-recovery">Open Recovery...</button>
+        <div class="separator"></div>
+        <button data-action="save">Save</button>
+        <button data-action="save-as">Save As...</button>
+        <button data-action="backup">Save Backup Copy</button>
+        <div class="separator"></div>
+        <button data-action="project-info">Project Info</button>
+      </div>
+
+      <button class="menuButton" id="editMenuBtn">Edit</button>
+      <button class="menuButton" id="windowMenuBtn">Window</button>
+      <div id="windowMenu" class="dropdown windowDropdown hidden">
+        <button data-window="explorer">Explorer</button>
+        <button data-window="properties">Properties</button>
+        <button data-window="toolbox">Toolbox</button>
+        <button data-window="asset-manager">Asset Manager</button>
+        <button data-window="output">Output</button>
+        <button data-window="command-bar">Command Bar</button>
+        <div class="separator"></div>
+        <button data-window="settings">Studio Bridge Settings</button>
+      </div>
+
+      <div class="playControls">
+        <button class="iconButton" id="playBtn" title="Publish/Test handoff">▶</button>
+        <button class="iconButton" id="stopBtn" title="Stop preview">■</button>
+      </div>
+
+      <div class="appTitle">Studio Bridge Mobile <span class="unofficial">Unofficial</span></div>
+      <div class="dirtyDot" id="dirtyDot" title="Unsaved changes"></div>
+    </div>
+
+    <div class="tabRow" id="tabRow">
+      <button class="tab active" data-tab="Home">Home</button>
+      <button class="tab" data-tab="Model">Model</button>
+      <button class="tab" data-tab="Avatar">Avatar</button>
+      <button class="tab" data-tab="UI">UI</button>
+      <button class="tab" data-tab="Script">Script</button>
+      <button class="tab" data-tab="Plugins">Plugins</button>
+    </div>
+
+    <div class="ribbon" id="ribbon"></div>
+  </header>
+
+  <main class="workspaceLayout">
+    <section class="centerPane">
+      <div class="viewportToolbar">
+        <span id="toolStatus">Select</span>
+        <label>Move <input id="moveSnap" inputmode="decimal" value="1" /></label>
+        <span>stud</span>
+        <label>Rotate <input id="rotateSnap" inputmode="decimal" value="45" /></label>
+        <span>°</span>
+        <label><input id="localSpace" type="checkbox" /> Local</label>
+      </div>
+
+      <canvas id="viewportCanvas"></canvas>
+
+      <div id="scriptPane" class="scriptPane hidden">
+        <div class="scriptHeader">
+          <span id="scriptTitle">Script</span>
+          <button id="closeScriptBtn">Close</button>
+        </div>
+        <textarea id="scriptEditor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      </div>
+
+      <div id="bottomDock" class="bottomDock hidden">
+        <div class="dockTabs">
+          <button class="active" data-dock-tab="output">Output</button>
+          <button data-dock-tab="command">Command Bar</button>
+          <button data-dock-tab="assets">Asset Manager</button>
+          <button id="closeBottomDock">×</button>
+        </div>
+        <div id="dockOutput" class="dockPane"><div id="outputLog" class="outputLog"></div></div>
+        <div id="dockCommand" class="dockPane hidden">
+          <div class="commandNotice">External editor command shell. Luau execution requires the real Roblox engine.</div>
+          <div class="commandRow"><textarea id="commandInput" placeholder="Editor commands: select Workspace | insert Part | find Script | validate"></textarea><button id="runCommandBtn">Run</button></div>
+        </div>
+        <div id="dockAssets" class="dockPane hidden">
+          <div class="assetManagerToolbar"><button id="refreshAssetsBtn">Refresh</button><span>Referenced Content IDs in this place</span></div>
+          <div id="assetManagerList" class="assetManagerList"></div>
+        </div>
+      </div>
+      <div class="statusBar">
+        <span id="statusText">Ready</span>
+        <span id="selectionText">No selection</span>
+      </div>
+    </section>
+
+    <aside class="rightPane">
+      <div class="panel explorerPanel">
+        <div class="panelHeader">
+          <span>Explorer</span>
+          <button id="addObjectBtn" title="Insert Object">＋</button>
+        </div>
+        <div class="explorerSearchRow"><input id="explorerSearch" placeholder="Search Explorer" /></div>
+        <div class="tree" id="explorerTree"></div>
+      </div>
+
+      <div class="panel propertiesPanel">
+        <div class="panelHeader">
+          <span>Properties</span>
+          <input id="propertySearch" placeholder="Filter Properties" />
+        </div>
+        <div id="propertiesList" class="propertiesList"></div>
+      </div>
+    </aside>
+
+    <aside id="toolboxPanel" class="toolboxPanel hidden">
+      <div class="panelHeader">
+        <span>Toolbox</span>
+        <button id="closeToolboxBtn">×</button>
+      </div>
+      <div class="toolboxTabs">
+        <button class="active">Creator Store</button>
+        <button>Inventory</button>
+        <button>Recent</button>
+        <button>Creations</button>
+      </div>
+      <div class="toolboxBody">
+        <input id="creatorSearch" placeholder="Search Creator Store" />
+        <button id="searchCreatorBtn">Search on Creator Store</button>
+        <div class="separator"></div>
+        <label>Insert asset reference by ID</label>
+        <input id="assetId" inputmode="numeric" placeholder="Asset ID" />
+        <select id="assetType">
+          <option value="MeshPart">MeshPart</option>
+          <option value="Decal">Decal</option>
+          <option value="Sound">Sound</option>
+          <option value="ImageLabel">ImageLabel</option>
+        </select>
+        <button id="insertAssetRefBtn">Insert Reference</button>
+        <p class="smallNote">Model/package downloading requires a Roblox-authenticated asset endpoint and is a later build item. This version never asks for your Roblox password.</p>
+      </div>
+    </aside>
+  </main>
+
+  <dialog id="saveDialog">
+    <form method="dialog" class="dialogCard">
+      <h3>Save Roblox Place</h3>
+      <label>File name
+        <input id="saveName" value="Place.rbxlx" />
+      </label>
+      <label>Format
+        <select id="saveFormat">
+          <option value="rbxlx">Roblox XML Place (.rbxlx)</option>
+          <option value="rbxmx">Roblox XML Model (.rbxmx)</option>
+        </select>
+      </label>
+      <p class="smallNote">Binary .rbxl/.rbxm export is intentionally disabled until the binary serializer is integrated and round-trip tested.</p>
+      <div class="dialogActions">
+        <button value="cancel">Cancel</button>
+        <button id="confirmSaveBtn" value="default">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="insertDialog">
+    <form method="dialog" class="dialogCard">
+      <h3>Insert Object</h3>
+      <div class="insertGrid">
+        <button type="button" data-insert="Folder">Folder</button>
+        <button type="button" data-insert="Model">Model</button>
+        <button type="button" data-insert="Part">Part</button>
+        <button type="button" data-insert="Script">Script</button>
+        <button type="button" data-insert="LocalScript">LocalScript</button>
+        <button type="button" data-insert="ModuleScript">ModuleScript</button>
+        <button type="button" data-insert="RemoteEvent">RemoteEvent</button>
+        <button type="button" data-insert="RemoteFunction">RemoteFunction</button>
+        <button type="button" data-insert="BoolValue">BoolValue</button>
+        <button type="button" data-insert="StringValue">StringValue</button>
+        <button type="button" data-insert="NumberValue">NumberValue</button>
+        <button type="button" data-insert="ScreenGui">ScreenGui</button>
+      </div>
+      <div class="dialogActions"><button value="cancel">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="recoveryDialog">
+    <form method="dialog" class="dialogCard">
+      <h3>Auto-Recovery</h3>
+      <div id="recoveryList" class="recoveryList"></div>
+      <div class="dialogActions"><button value="cancel">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="dialogCard">
+      <h3>Studio Bridge Settings</h3>
+      <label>Auto-Recovery Interval (minutes)
+        <input id="recoveryInterval" inputmode="numeric" type="number" min="1" max="60" value="5" />
+      </label>
+      <label><input id="autoRecoveryEnabled" type="checkbox" checked /> Auto-Recovery Enabled</label>
+      <label><input id="showToolLabels" type="checkbox" checked /> Show toolbar labels</label>
+      <p class="smallNote">These are editor preferences. Roblox place geometry still saves using Roblox studs, degrees, CFrames, and serialized Instance properties.</p>
+      <div class="dialogActions"><button id="applySettingsBtn" value="default">Apply</button><button value="cancel">Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="infoDialog">
+    <form method="dialog" class="dialogCard">
+      <h3>Project Info</h3>
+      <div id="projectInfo"></div>
+      <div class="dialogActions"><button value="cancel">Close</button></div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

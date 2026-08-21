@@ -1,0 +1,10 @@
+{
+  "name": "Studio Bridge Mobile v0.2",
+  "short_name": "Studio Bridge",
+  "description": "Unofficial iPhone-first Roblox XML place/model compatibility editor.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1f2125",
+  "theme_color": "#1f2125",
+  "icons": []
+}
